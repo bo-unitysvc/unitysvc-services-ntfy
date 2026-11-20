@@ -3,17 +3,21 @@
     "push-notification"
   ],
   "currency": "USD",
-  "description": "The service fronts a private ntfy instance at ntfy.unitysvc.dev. Enrolling issues you a unique enrollment code that doubles as your private ntfy topic; the gateway authenticates each publish with your UnitySVC API key and forwards the request body, headers and all, to that topic upstream. ntfy headers pass straight through, so message priorities (1-5), emoji tags, click actions, scheduled delivery, and attachments all work unchanged. Messages are capped at 4096 bytes and retained for 12 hours. Billing is per notification published.\n\nPublish at your enrollment endpoint, `${API_GATEWAY_BASE_URL}/e/<your-enrollment-code>`, sending your UnitySVC key as a bearer token — cURL, Python `requests`, or `fetch` all work with no client library. Receive either by subscribing the ntfy mobile app (iOS/Android) directly to server `https://ntfy.unitysvc.dev` with your enrollment code as the topic, or by streaming the gateway's `/json` and `/ws` endpoints with the same key. See the \"Getting started\" tutorial and user guide for full setup.",
+  "description": "A private ntfy push-notification server per enrollment: publish over plain HTTP, receive on iOS, Android, desktop or a streaming client.\n\nUnitySVC runs the official ntfy image in an isolated container for each enrollment, reachable at its own HTTPS address. Every request must carry your access token. Message priorities, tags, click actions, scheduled delivery and attachments all work as in ntfy. Messages are capped at 4096 bytes and kept for 12 hours. Storage is temporary: cached messages are lost when the instance is replaced or stopped. Billing is per instance-month.\n\nEnroll in the base channel, keep or replace the generated access token, then publish with `Authorization: Bearer <token>` to `https://<instance>/<topic>`. Point the ntfy app at the same instance URL to subscribe. See How to use this service for the full setup and limitations.",
   "details": {
     "features": [
       "HTTP POST/PUT publishing",
-      "Real-time WebSocket subscriptions",
+      "Real-time WebSocket and JSON-stream subscriptions",
       "Mobile apps (iOS, Android)",
       "Message priorities (1-5) and emoji tags",
       "Click actions and attachments",
       "Scheduled/delayed delivery",
-      "No signup required"
+      "A private instance for each enrollment, protected by your access token"
     ],
+    "links": {
+      "homepage": "https://ntfy.sh",
+      "source_code": "https://github.com/binwiederhier/ntfy"
+    },
     "max_message_size_bytes": 4096,
     "message_retention_hours": 12,
     "protocols": [
@@ -21,23 +25,58 @@
       "websocket"
     ]
   },
-  "documents": {},
+  "instance_spec": "compose.yaml",
   "name": "ntfy-sh",
   "payout_price": {
-    "description": "Platform retains 0% - free service",
-    "percentage": "100.00",
+    "description": "Platform retains 20% after base cost",
+    "percentage": "80.00",
     "type": "revenue_share"
   },
-  "service_type": "notification",
+  "service_type": "container",
   "status": "ready",
-  "summary": "Push notifications over plain HTTP: POST a message from any script, CI pipeline, or app and receive it instantly on your phone, desktop, or a streaming client.",
+  "summary": "Push notifications over plain HTTP: POST a message from any script, CI pipeline, or app and receive it on your phone, desktop, or a streaming client, on your own private ntfy instance.",
   "time_created": "2025-01-04T00:00:00Z",
   "upstream_access_config": {
-    "ntfy-upstream": {
-      "access_method": "http",
-      "api_key": null,
-      "base_url": "${ secrets.NTFY_SERVER_URL ?? https://ntfy.unitysvc.dev }/{{ enrollment.code }}",
-      "description": "Private ntfy instance - no authentication required"
+    "base": {
+      "access_method": "container",
+      "description": "One private ntfy instance for one enrollment; temporary storage.",
+      "entries": [
+        {
+          "auth": "app",
+          "name": "api",
+          "path": "/",
+          "port": 80,
+          "service": "ntfy"
+        }
+      ],
+      "environment": {
+        "ntfy": {
+          "NTFY_AUTH_TOKENS": "admin:{{ params.NTFY_ACCESS_TOKEN }}:enrollment",
+          "NTFY_AUTH_USERS": "admin:$2a$10$oGEA5sTZZVcFOpiqyGaTn.qJ/XvvZbnEdq05hW9T5OEmh9S5IiY2q:admin"
+        }
+      },
+      "params": {
+        "schema": {
+          "properties": {
+            "NTFY_ACCESS_TOKEN": {
+              "default": "tk_{{ token_urlsafe(length=29) }}",
+              "description": "Generated for this enrollment; keep it or enter your own (the form tk_ followed by 29 letters, digits, - or _). It is the Bearer token for publishing to and subscribing from your instance, and without it every request is denied. Save it; it is also shown in the enrollment's instance details. Changing it later restarts the instance.",
+              "pattern": "^tk_[-_A-Za-z0-9]{29}$",
+              "title": "Access token",
+              "type": "string"
+            }
+          },
+          "required": [
+            "NTFY_ACCESS_TOKEN"
+          ],
+          "type": "object"
+        },
+        "testing_defaults": {
+          "NTFY_ACCESS_TOKEN": "tk_unitysvcopstestntfy0000000001"
+        }
+      },
+      "resources": "nano",
+      "type": "enrollable"
     }
   }
 }
