@@ -1,14 +1,6 @@
 {
   "display_name": "ntfy Push Notifications",
   "documents": {
-    "Connectivity probes": {
-      "category": "connectivity_test",
-      "description": "Instance health probe",
-      "file_path": "connectivity.json",
-      "is_active": true,
-      "is_public": false,
-      "mime_type": "json"
-    },
     "Connectivity test": {
       "$doc_preset": "container_connectivity"
     },

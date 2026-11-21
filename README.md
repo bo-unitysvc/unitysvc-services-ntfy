@@ -27,7 +27,6 @@ services/specs/
         ├── listing.json               # Listing: documents and price
         ├── service.json               # Identity sidecar (backend service_id)
         ├── compose.yaml               # Instance spec: the ntfy image and fixed settings
-        ├── connectivity.json          # Declarative probes (GET /v1/health)
         ├── usage.md                   # "How to use this service" (public)
         ├── user-guide.md              # Tutorial: publish, subscribe, troubleshooting (public)
         └── images/                    # Screenshots used by the guide
@@ -59,8 +58,7 @@ Documents are defined in `listing.json` and referenced via relative `file_path`:
 
 | Document | Category | Public | Description |
 |----------|----------|--------|-------------|
-| Connectivity test | `connectivity_test` | No | `container_connectivity` preset |
-| Connectivity probes | `connectivity_test` | No | `connectivity.json`: `GET /v1/health` expects `"healthy":true` |
+| Connectivity test | `connectivity_test` | No | generic `container_connectivity` preset: the platform starts the instance, waits for its health check and fetches each entry |
 | How to use this service | `getting_started` | Yes | Enroll, token, publish, subscribe, limits |
 | User guide | `tutorial` | Yes | Publishing options, subscribing, troubleshooting |
 
@@ -87,13 +85,13 @@ usvc_seller specs validate
 # Canonical formatting; commit the result
 usvc_seller specs format
 
-# Local container test — runs the image in Docker, waits for the health check and probes /v1/health
+# Local container test — runs the image in Docker and waits for the health check
 usvc_seller specs run-tests labs/ntfy-sh --force
 
 # Push to staging (re-upload creates a revision)
 usvc_seller specs upload labs/ntfy-sh
 
-# Platform test — starts a temporary instance on the compute cluster and runs the probes
+# Platform test — starts a temporary instance on the compute cluster
 usvc_seller services run-tests labs/ntfy-sh --force
 ```
 
