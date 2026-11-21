@@ -4,7 +4,7 @@ Service data for [ntfy.sh](https://ntfy.sh) push notifications on the [UnitySVC]
 
 ## Overview
 
-This repo contains the provider, offering, and listing data for the **ntfy Push Notifications** service. Each enrollment gets a unique private topic — publish messages via simple HTTP POST requests and receive them instantly on mobile (iOS/Android), desktop, or via streaming API.
+This repo contains the provider, offering, and listing data for the **ntfy Push Notifications** service. `labs/ntfy-sh` is a **container service**: UnitySVC runs the official `binwiederhier/ntfy` image as one private instance per enrollment on the UnitySVC compute cluster, at the customer's expense. Publish messages via simple HTTP POST requests to the instance URL and receive them on mobile (iOS/Android), desktop, or via a streaming API.
 
 **Key features:**
 
@@ -13,7 +13,8 @@ This repo contains the provider, offering, and listing data for the **ntfy Push 
 - Mobile apps for iOS and Android
 - Message priorities (1–5), emoji tags, click actions, and attachments
 - Scheduled/delayed delivery
-- Free — no signup or cost to use
+- A private server per enrollment, protected by an access token (`NTFY_ACCESS_TOKEN`)
+- Billed per instance-month (list price $5 per month)
 
 ## Data Structure
 
@@ -22,20 +23,34 @@ services/specs/
 └── labs/
     └── ntfy-sh/                       # the folder name IS the service name
         ├── provider.json              # Provider: UnitySVC Labs (`labs`)
-        ├── offering.json              # Offering: capabilities, upstream config
-        ├── listing.json               # Listing: documents, price, user access interface
+        ├── offering.json              # Offering: container channel, entry, params, payout
+        ├── listing.json               # Listing: documents and price
         ├── service.json               # Identity sidecar (backend service_id)
-        ├── connectivity.sh.j2         # Connectivity test (private)
-        ├── code_example.sh.j2         # cURL publish example (public)
-        ├── code_example.py.j2         # Python publish example (public)
-        ├── user-guide.md              # Tutorial: setup, publish, subscribe (public)
-        ├── tutorials/
-        │   └── getting-started.md     # Step-by-step onboarding guide (public)
-        └── images/                    # Screenshots used by the guides
+        ├── compose.yaml               # Instance spec: the ntfy image and fixed settings
+        ├── usage.md                   # "How to use this service" (public)
+        ├── user-guide.md              # Tutorial: publish, subscribe, troubleshooting (public)
+        └── images/                    # Screenshots used by the guide
 ```
 
 The service is published as **`labs/ntfy-sh`** — `listing.name` is the folder's
 path under `services/specs/`, and `offering.name` is the bare service name (`ntfy-sh`).
+
+### How the instance is configured
+
+`compose.yaml` holds the fixed, non-secret ntfy settings (cache and auth
+databases in `/tmp`, 12 h retention, 4 KB messages, `deny-all` default access,
+health check). The offering's `base` channel (`access_method: container`,
+`type: enrollable`, tier `nano`) exposes one public entry, `api`, on the ntfy
+HTTP port with `auth: app`, so **ntfy itself** authenticates every request.
+
+The enrollment parameter **`NTFY_ACCESS_TOKEN`** (generated default, can be
+replaced; ntfy's `tk_` + 29-character format) is injected through the
+channel's `environment` as `NTFY_AUTH_TOKENS`, owned by a provisioned `admin`
+user whose password is a placeholder hash that nobody knows. Customers
+publish and subscribe with `Authorization: Bearer <token>`.
+
+Storage is ephemeral: cached messages are lost when the instance is replaced
+or stopped.
 
 ### Documents
 
@@ -43,24 +58,18 @@ Documents are defined in `listing.json` and referenced via relative `file_path`:
 
 | Document | Category | Public | Description |
 |----------|----------|--------|-------------|
-| cURL code example | `code_example` | Yes | Publish a notification with cURL |
-| Python code example | `code_example` | Yes | Publish a notification with Python |
-| Getting started tutorial | `tutorial` | Yes | Enrollment, publishing, mobile app, WebSocket subscriptions |
-| User guide | `tutorial` | Yes | Tutorial covering publishing, subscribing, and mobile app setup |
-| Connectivity test | `connectivity_test` | No | Automated connectivity validation |
-
-Code examples (`.sh.j2`, `.py.j2`) are Jinja2 templates that use environment variables `SERVICE_BASE_URL` and `UNITYSVC_API_KEY` at runtime.
+| Connectivity test | `connectivity_test` | No | generic `container_connectivity` preset: the platform starts the instance, waits for its health check and fetches each entry |
+| How to use this service | `getting_started` | Yes | Enroll, token, publish, subscribe, limits |
+| User guide | `tutorial` | Yes | Publishing options, subscribing, troubleshooting |
 
 ## Setup
 
-Load the committed secrets manifest, then supply your seller credentials:
+Supply your seller credentials (this service needs no seller secrets, so there is no secrets manifest):
 
 ```bash
-set -a; . ./seller.secrets.txt; set +a     # .env.example is a symlink to it
 
 export UNITYSVC_SELLER_API_KEY="<seller-key>"
 export UNITYSVC_SELLER_API_URL="https://seller.staging.unitysvc.com/v1/"
-export UNITYSVC_API_KEY="<svcpass-key>"    # used as a gateway customer
 ```
 
 The CLI ships with [`unitysvc-sellers`](https://github.com/unitysvc/unitysvc-sellers).
@@ -76,32 +85,30 @@ usvc_seller specs validate
 # Canonical formatting; commit the result
 usvc_seller specs format
 
-# Upstream-side tests — renders the docs against ntfy directly
-usvc_seller specs run-tests labs/ntfy-sh
+# Local container test — runs the image in Docker and waits for the health check
+usvc_seller specs run-tests labs/ntfy-sh --force
 
 # Push to staging (re-upload creates a revision)
 usvc_seller specs upload labs/ntfy-sh
 
-# Gateway-side tests — route + svcpass key + upstream
+# Platform test — starts a temporary instance on the compute cluster
 usvc_seller services run-tests labs/ntfy-sh --force
 ```
 
-`specs run-tests` skips cases that previously passed; add `--force` to re-run them.
 
 ## Architecture
 
 ```
 Publisher (cURL/Python/etc.)
-    │
+    │  Authorization: Bearer <NTFY_ACCESS_TOKEN>
     ▼
-UnitySVC Gateway  ──────►  ntfy.unitysvc.dev/{topic}
-    (auth + routing)              │
-                                  ├──► Mobile app (iOS/Android)
-                                  ├──► WebSocket clients
-                                  └──► JSON stream subscribers
+https://<enrollment-code>.<apps-domain>     (one ntfy container per enrollment)
+    │
+    ├──► Mobile app (iOS/Android)
+    ├──► WebSocket clients
+    └──► JSON stream subscribers
 ```
 
-- **Gateway** handles authentication (API key) and routes requests to the upstream ntfy instance
-- **Upstream** is a private ntfy server — each enrollment gets a unique 6-character topic code, referenced in the specs as `{{ enrollment.code }}`
-- The upstream host is the seller secret **`NTFY_SERVER_URL`**, declared in `seller.secrets.txt` and defaulting to `https://ntfy.unitysvc.dev`
-- **Mobile apps** connect directly to the ntfy server (no API key needed for receiving)
+- Requests go **directly to the instance**, not through the UnitySVC API gateway; the UnitySVC API key is not used.
+- **Authentication** is ntfy's own access control, seeded at start-up from `NTFY_ACCESS_TOKEN`; anonymous requests are denied.
+- **Mobile apps** connect to the instance URL and sign in with the token.

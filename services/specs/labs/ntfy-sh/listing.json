@@ -2,28 +2,13 @@
   "display_name": "ntfy Push Notifications",
   "documents": {
     "Connectivity test": {
-      "category": "connectivity_test",
-      "description": "Connectivity test script for ntfy push notifications",
-      "file_path": "connectivity.sh.j2",
-      "is_active": true,
-      "is_public": false,
-      "mime_type": "bash"
+      "$doc_preset": "container_connectivity"
     },
-    "Getting started tutorial": {
-      "category": "tutorial",
-      "description": "Step-by-step guide to ntfy push notifications: enrollment, publishing, mobile app, WebSocket subscriptions, and rich notifications",
-      "file_path": "tutorials/getting-started.md",
-      "is_active": true,
+    "How to use this service": {
+      "category": "getting_started",
+      "file_path": "usage.md",
       "is_public": true,
       "mime_type": "markdown"
-    },
-    "Python code example": {
-      "category": "code_example",
-      "description": "Publish a notification with Python",
-      "file_path": "code_example.py.j2",
-      "is_active": true,
-      "is_public": true,
-      "mime_type": "python"
     },
     "User guide": {
       "category": "tutorial",
@@ -32,29 +17,14 @@
       "is_active": true,
       "is_public": true,
       "mime_type": "markdown"
-    },
-    "cURL code example": {
-      "category": "code_example",
-      "description": "Publish a notification with cURL",
-      "file_path": "code_example.sh.j2",
-      "is_active": true,
-      "is_public": true,
-      "mime_type": "bash"
     }
   },
   "list_price": {
-    "description": "$0.01 / notification",
-    "price": "0.01",
-    "type": "constant"
+    "description": "$5 per month per instance",
+    "price": "5",
+    "type": "one_month"
   },
   "name": "labs/ntfy-sh",
   "status": "ready",
-  "time_created": "2025-01-04T00:00:00Z",
-  "user_access_interfaces": {
-    "ntfy-gateway": {
-      "access_method": "http",
-      "base_url": "${API_GATEWAY_BASE_URL}/ntfy",
-      "description": "Publish notifications via HTTP POST to your enrollment endpoint, /e/<code>"
-    }
-  }
+  "time_created": "2025-01-04T00:00:00Z"
 }

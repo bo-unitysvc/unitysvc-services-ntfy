@@ -1,23 +1,49 @@
 # ntfy Push Notifications — Tutorial
 
-Push notifications delivered via HTTP. Publish from any script, CI pipeline, or app — receive on your phone, desktop, or via API.
+Push notifications delivered via HTTP from your own private [ntfy](https://ntfy.sh) server. Publish from any script, CI pipeline, or app, and receive on your phone, desktop, or via API.
+
+The short setup is in **How to use this service**. This guide covers publishing options, subscribing, and troubleshooting.
 
 ---
 
-## What You Get After Enrolling
+## What you get after enrolling
 
-After enrolling in **ntfy Push Notifications**, you receive:
+- A private ntfy server at `https://<enrollment-code>.<apps-domain>` (shown in the instance details; used as `<instance>` below).
+- An **access token** (`tk_...`). Every request to the instance must carry it, so your topics are private to anyone who does not have the token.
 
-- A unique **endpoint URL** like `https://api.unitysvc.com/e/RZEVCL`
-- The 6-character code (`RZEVCL`) is your **private topic** — all messages published to this URL are delivered only to subscribers of this topic
-
-You'll also need your **UnitySVC API key** (found on the API Keys page in your dashboard) to publish messages through the gateway.
+Your UnitySVC API key is not used with this service, and requests do not pass through the UnitySVC API gateway.
 
 ---
 
-## Step 1 — Set Up the Mobile App
+## Step 1 — Send your first message
 
-Install the official ntfy app so you can receive notifications on your phone.
+```bash
+curl -H "Authorization: Bearer tk_YOUR_TOKEN" \
+     -H "Title: Test" -H "Priority: high" -H "Tags: tada" \
+     -d "Hello from ntfy!" https://<instance>/alerts
+```
+
+`alerts` is the topic; use any name. A successful publish returns the message as JSON (`"event":"message"`).
+
+From Python:
+
+```python
+import requests
+
+requests.post(
+    "https://<instance>/alerts",
+    headers={"Authorization": "Bearer tk_YOUR_TOKEN", "Title": "Hello", "Tags": "wave"},
+    data="Sent from Python",
+).raise_for_status()
+```
+
+---
+
+## Step 2 — Receive messages
+
+### Mobile and desktop apps
+
+Install the official ntfy app.
 
 | Platform | App |
 |----------|-----|
@@ -26,325 +52,124 @@ Install the official ntfy app so you can receive notifications on your phone.
 
 <img src="images/ntfy-app-store.jpg" alt="ntfy app store listing" width="300">
 
-Once installed, add a subscription:
+Add a subscription: tap **+**, enter your topic, choose **Use another server**, enter `https://<instance>`, and sign in with the access token when the app asks for credentials.
 
-1. Tap **+** (or "Add subscription")
-2. Set **Server URL** to `https://ntfy.unitysvc.dev`
-3. Set **Topic** to your 6-character code (e.g. `RZEVCL`)
-4. Tap **Subscribe**
+> The apps connect directly to your instance. The instance denies anonymous access, so a subscription without the credential fails with 401/403.
 
-<table><tr>
-<td><img src="images/ntfyapp-settings.jpg" alt="App settings — set default server to ntfy.unitysvc.dev" width="300"></td>
-<td><img src="images/ntfy-subscription.jpg" alt="Add subscription (iOS)" width="300"></td>
-</tr><tr>
-<td><em>Set default server to ntfy.unitysvc.dev</em></td>
-<td><em>Enter your topic code and subscribe</em></td>
-</tr></table>
-
-<table><tr>
-<td><img src="images/SubscribeToTopic.png" alt="Subscribe to topic (Android)" width="350"></td>
-<td><img src="images/AfterSubscription.png" alt="Subscribed — ready to receive" width="350"></td>
-</tr><tr>
-<td><em>Subscribe to topic (Android)</em></td>
-<td><em>Subscribed — ready to receive</em></td>
-</tr></table>
-
-> Mobile app subscriptions connect directly to the ntfy server (not through the UnitySVC gateway), so no API key is needed for receiving.
-
----
-
-## Step 2 — Send Your First Message
-
-Open a terminal and publish a plain-text message:
-
-```bash
-curl -X POST "https://api.unitysvc.com/e/RZEVCL" \
-  -H "Authorization: Bearer svcpass_YOUR_API_KEY" \
-  -d "Hello from ntfy!"
-```
-
-You should see a JSON response confirming the message:
-
-```json
-{
-  "id": "HwsCmea3Bz8H",
-  "time": 1771019353,
-  "event": "message",
-  "topic": "RZEVCL",
-  "message": "Hello from ntfy!"
-}
-```
-
-Within seconds, the notification should appear on your phone.
-
-<img src="images/serverURL_topicFields.png" alt="First notification received on desktop" width="600">
-
----
-
-## Step 3 — Receive Messages
-
-There are several ways to receive messages beyond the mobile app.
+> iOS note: a self-hosted server has no direct path to Apple's push service, so iOS notifications can be delayed until the app is opened. Android delivers over a persistent connection.
 
 ### HTTP JSON stream
 
-Open a long-lived connection to stream messages in real time:
-
 ```bash
-curl -s "https://api.unitysvc.com/e/RZEVCL/json" \
-  -H "Authorization: Bearer svcpass_YOUR_API_KEY"
+curl -s -H "Authorization: Bearer tk_YOUR_TOKEN" https://<instance>/alerts/json
 ```
 
-This outputs newline-delimited JSON — one event per line — until you disconnect:
+Output is newline-delimited JSON, one event per line:
 
 ```json
-{"event":"open","topic":"RZEVCL"}
-{"event":"message","topic":"RZEVCL","message":"Hello!","title":"Test","priority":3}
-{"event":"keepalive","topic":"RZEVCL"}
+{"event":"open","topic":"alerts"}
+{"event":"message","topic":"alerts","message":"Hello!","title":"Test","priority":4}
+{"event":"keepalive","topic":"alerts"}
 ```
 
-### WebSocket (Python)
+### WebSocket
 
-```python
-import asyncio
-import json
-import websockets
-
-async def listen():
-    uri = "wss://api.unitysvc.com/e/RZEVCL/ws"
-    headers = {"Authorization": "Bearer svcpass_YOUR_API_KEY"}
-
-    async with websockets.connect(uri, additional_headers=headers) as ws:
-        async for raw in ws:
-            event = json.loads(raw)
-            if event["event"] == "message":
-                print(f"[{event.get('title', 'Notification')}] {event['message']}")
-
-asyncio.run(listen())
+```bash
+websocat -H "Authorization: Bearer tk_YOUR_TOKEN" wss://<instance>/alerts/ws
 ```
 
-### WebSocket (JavaScript)
+Browsers cannot set headers on WebSockets; use the `?auth=` query parameter described in the [ntfy docs](https://docs.ntfy.sh/subscribe/api/#authentication).
 
-```javascript
-const ws = new WebSocket("wss://api.unitysvc.com/e/RZEVCL/ws");
-
-// Note: WebSocket API does not support custom headers in browsers.
-// Use query parameter authentication if available, or use the
-// HTTP JSON stream (EventSource) approach instead for browser apps.
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if (data.event === "message") {
-    console.log(`[${data.title || "Notification"}] ${data.message}`);
-  }
-};
-```
-
-### Event types
-
-| Event | Description |
-|-------|-------------|
-| `open` | Sent when the connection is established |
-| `message` | A published message (contains `message`, `title`, `priority`, `tags`, etc.) |
-| `keepalive` | Periodic heartbeat (~30 seconds) to keep the connection alive |
+| Event | Meaning |
+|-------|---------|
+| `open` | Connection established |
+| `message` | A published message |
+| `keepalive` | Periodic heartbeat |
 
 ---
 
-## Step 4 — Priority, Tags, and Formatting
-
-### Title, priority, and tags
-
-ntfy supports rich notifications via HTTP headers:
+## Step 3 — Priority, tags, and formatting
 
 ```bash
-curl -X POST "https://api.unitysvc.com/e/RZEVCL" \
-  -H "Authorization: Bearer svcpass_YOUR_API_KEY" \
-  -H "Title: Build Failed" \
-  -H "Priority: high" \
-  -H "Tags: warning,build" \
-  -d "Build #1234 failed on main branch"
+curl -H "Authorization: Bearer tk_YOUR_TOKEN" \
+     -H "Title: Deploy finished" -H "Priority: 4" -H "Tags: rocket,white_check_mark" \
+     -H "Click: https://example.com/deploys/123" \
+     -H "Delay: 30m" \
+     -d "Version 1.2.3 is live" https://<instance>/alerts
 ```
 
-### Priority levels
+| Header | Purpose |
+|--------|---------|
+| `Title` | Notification title |
+| `Priority` | 1 (min) to 5 (max), or `min`, `low`, `default`, `high`, `max` |
+| `Tags` | Comma-separated emoji short codes or labels |
+| `Click` | URL opened when the notification is tapped |
+| `Delay` | Deliver later (`30m`, `2h`, or a timestamp) |
+| `Actions` | Up to three action buttons |
+| `Attach` | URL of a file to show with the message |
 
-| Priority | Name | Use case |
-|----------|------|----------|
-| 1 | `min` | Background info, logs |
-| 2 | `low` | Routine notifications |
-| 3 | `default` | Normal messages |
-| 4 | `high` | Important alerts |
-| 5 | `urgent` | Critical — bypasses Do Not Disturb on mobile |
-
-### JSON body format
-
-You can also send structured JSON instead of using headers:
-
-```bash
-curl -X POST "https://api.unitysvc.com/e/RZEVCL" \
-  -H "Authorization: Bearer svcpass_YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "Disk usage above 90%",
-    "title": "Server Alert",
-    "priority": 4,
-    "tags": ["warning", "disk"]
-  }'
-```
-
-### Click actions
-
-Attach a URL that opens when the notification is tapped:
-
-```bash
-curl -X POST "https://api.unitysvc.com/e/RZEVCL" \
-  -H "Authorization: Bearer svcpass_YOUR_API_KEY" \
-  -H "Click: https://example.com/dashboard" \
-  -d "New report ready — click to view"
-```
-
-### Delayed delivery
-
-Schedule a message for later:
-
-```bash
-curl -X POST "https://api.unitysvc.com/e/RZEVCL" \
-  -H "Authorization: Bearer svcpass_YOUR_API_KEY" \
-  -H "Delay: 30m" \
-  -d "Reminder: check on the deploy"
-```
-
-Accepts values like `30m`, `2h`, `tomorrow 9am`, or a Unix timestamp.
+You can also publish a JSON body to the instance root (`POST https://<instance>/`) with `topic`, `message`, `title`, `priority`, `tags`, `click`, `actions` fields; see the [ntfy docs](https://docs.ntfy.sh/publish/#publish-as-json).
 
 ---
 
-## Use Case Examples
-
-### CI/CD pipeline notifications
-
-Send a notification when a GitHub Actions workflow completes:
+## Use case: CI/CD notification
 
 ```yaml
 # .github/workflows/deploy.yml
-- name: Notify on success
-  if: success()
+- name: Notify
+  if: always()
   run: |
-    curl -s -X POST "https://api.unitysvc.com/e/RZEVCL" \
-      -H "Authorization: Bearer ${{ secrets.UNITYSVC_API_KEY }}" \
-      -H "Title: Deploy Succeeded" \
-      -H "Tags: white_check_mark" \
-      -d "Deployed ${{ github.sha }} to production"
-
-- name: Notify on failure
-  if: failure()
-  run: |
-    curl -s -X POST "https://api.unitysvc.com/e/RZEVCL" \
-      -H "Authorization: Bearer ${{ secrets.UNITYSVC_API_KEY }}" \
-      -H "Title: Deploy Failed" \
-      -H "Priority: high" \
-      -H "Tags: x" \
-      -d "Deploy failed for ${{ github.sha }}"
-```
-
-### Server monitoring
-
-```bash
-#!/bin/bash
-USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
-if [ "$USAGE" -gt 90 ]; then
-  curl -s -X POST "https://api.unitysvc.com/e/RZEVCL" \
-    -H "Authorization: Bearer svcpass_YOUR_API_KEY" \
-    -H "Title: Disk Alert" \
-    -H "Priority: high" \
-    -H "Tags: warning" \
-    -d "Disk usage at ${USAGE}% on $(hostname)"
-fi
-```
-
-### Python application
-
-```python
-import requests
-
-def notify(message, title=None, priority=None, tags=None):
-    headers = {"Authorization": "Bearer svcpass_YOUR_API_KEY"}
-    if title:
-        headers["Title"] = title
-    if priority:
-        headers["Priority"] = str(priority)
-    if tags:
-        headers["Tags"] = ",".join(tags)
-
-    requests.post(
-        "https://api.unitysvc.com/e/RZEVCL",
-        headers=headers,
-        data=message,
-    )
-
-# Usage
-notify("Order #1234 shipped", title="Order Update", tags=["package"])
-notify("Payment failed", title="Billing Alert", priority=4, tags=["warning"])
+    curl -H "Authorization: Bearer ${{ secrets.NTFY_TOKEN }}" \
+         -H "Title: Deploy ${{ job.status }}" \
+         -d "${{ github.repository }}@${{ github.sha }}" \
+         https://<instance>/deploys
 ```
 
 ---
 
-## Authentication
+## Endpoints reference
 
-All requests through the UnitySVC gateway require your API key in the `Authorization` header:
-
-```
-Authorization: Bearer svcpass_YOUR_API_KEY
-```
-
-You can create API keys from the **API Keys** page in your UnitySVC dashboard.
-
----
-
-## Endpoints Reference
-
-All endpoints use your enrollment URL as the base. Replace `RZEVCL` with your topic code.
+All paths are on your instance, `https://<instance>`.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/e/RZEVCL` | Publish a message |
-| `PUT` | `/e/RZEVCL` | Publish a message (same as POST) |
-| `GET` | `/e/RZEVCL/json` | Subscribe via HTTP JSON stream |
-| `GET` | `/e/RZEVCL/ws` | Subscribe via WebSocket |
+| `POST` / `PUT` | `/<topic>` | Publish a message |
+| `GET` | `/<topic>/json` | Subscribe via HTTP JSON stream |
+| `GET` | `/<topic>/sse` | Subscribe via server-sent events |
+| `GET` | `/<topic>/ws` | Subscribe via WebSocket |
+| `GET` | `/v1/health` | Health check (no token needed) |
 
 ---
 
 ## Limits
 
-- **Message size**: 4 KB max per message
-- **Message retention**: 12 hours (messages older than 12h are discarded)
-- **Topic isolation**: Each enrollment gets a unique topic code. You cannot publish to or subscribe to other enrollments' topics through the gateway.
+- **Message size**: 4 KB max per message.
+- **Message retention**: 12 hours.
+- **Temporary storage**: cached messages are lost when the instance is replaced, stopped or deleted. Clients that were offline during that time will not receive them.
+- **Access token**: one token per instance. Changing it restarts the instance.
 
 ---
 
 ## Troubleshooting
 
-### 401 Unauthorized
+### 401 / 403
 
-- Verify your API key starts with `svcpass_` and is not expired or revoked
-- Ensure the `Authorization: Bearer ...` header is included
+- The `Authorization: Bearer tk_...` header is missing or the token is wrong. Copy it from the enrollment's instance details.
+- The token must be `tk_` followed by 29 letters, digits, `-` or `_`.
 
-### 404 Not Found
+### Cannot connect, or the instance is not ready
 
-- Check that you are enrolled in the ntfy service (visit your Enrollments page)
-- Verify the topic code in the URL matches exactly (codes are case-sensitive, uppercase only)
-
-### WebSocket disconnects after ~5 minutes of inactivity
-
-- The gateway keeps connections alive as long as data flows. ntfy sends keepalive messages every ~30 seconds, so this should not happen under normal conditions.
-- If you see disconnects, check your client-side timeout settings.
+- The instance takes a short while to start after enrolling or after changing the token. Check its status in the enrollment details.
 
 ### Messages not appearing on mobile
 
-- Ensure you've entered the correct server URL (`https://ntfy.unitysvc.dev`) and topic code in the mobile app
-- Messages are retained for 12 hours — older messages won't appear
+- Confirm the server URL is `https://<instance>` and the app has the access token set.
+- Messages older than 12 hours, or published before an instance restart, are gone.
 
 ---
 
-## Further Reading
+## Further reading
 
-- [ntfy documentation](https://docs.ntfy.sh/) — Full ntfy protocol reference
-- [ntfy publishing options](https://docs.ntfy.sh/publish/) — All supported headers and JSON fields
-- [ntfy subscribe API](https://docs.ntfy.sh/subscribe/api/) — Subscription protocols and filters
+- [ntfy documentation](https://docs.ntfy.sh/)
+- [Publishing options](https://docs.ntfy.sh/publish/)
+- [Subscribe API](https://docs.ntfy.sh/subscribe/api/)
