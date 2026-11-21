@@ -59,7 +59,7 @@
         "schema": {
           "properties": {
             "NTFY_ACCESS_TOKEN": {
-              "default": "tk_{{ token_urlsafe(length=29) }}",
+              "default": "tk_{{ token_urlsafe(21) }}0",
               "description": "Generated for this enrollment; keep it or enter your own (the form tk_ followed by 29 letters, digits, - or _). It is the Bearer token for publishing to and subscribing from your instance, and without it every request is denied. Save it; it is also shown in the enrollment's instance details. Changing it later restarts the instance.",
               "pattern": "^tk_[-_A-Za-z0-9]{29}$",
               "title": "Access token",
