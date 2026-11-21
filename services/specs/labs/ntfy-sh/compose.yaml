@@ -3,7 +3,8 @@
 # values below are the instance's fixed, non-secret settings.
 services:
   ntfy:
-    image: binwiederhier/ntfy:v2.38.1
+    # v2.38.1, pinned by digest: the compute agent refuses an image that is not.
+    image: binwiederhier/ntfy:v2.38.1@sha256:038da2be5e668fee6d36a62884eea48975e1b71c29a56964e5298c1b9165a573
     command: [serve]
     ports:
       - 80
