@@ -1,0 +1,558 @@
+{
+  "capabilities": [
+    "notification-relay"
+  ],
+  "currency": "USD",
+  "description": "A private ntfy push-notification server per enrollment: publish over plain HTTP, receive on iOS, Android, desktop or a streaming client.\n\nUnitySVC runs the official ntfy image in an isolated container for each enrollment, reachable at its own HTTPS address. Every request must carry your access token. Message priorities, tags, click actions, scheduled delivery and attachments all work as in ntfy. Messages are capped at 4096 bytes and kept for 12 hours. Storage is temporary: cached messages are lost when the instance is replaced or stopped. Billing is per instance-month.\n\nEnroll in the base channel, keep or replace the generated access token, then publish with `Authorization: Bearer <token>` to `https://<instance>/<topic>`. Point the ntfy app at the same instance URL to subscribe. See How to use this service for the full setup and limitations.",
+  "details": {
+    "features": [
+      "HTTP POST/PUT publishing",
+      "Real-time WebSocket and JSON-stream subscriptions",
+      "Mobile apps (iOS, Android)",
+      "Message priorities (1-5) and emoji tags",
+      "Click actions and attachments",
+      "Scheduled/delayed delivery",
+      "A private instance for each enrollment, protected by your access token"
+    ],
+    "links": {
+      "homepage": "https://ntfy.sh",
+      "source_code": "https://github.com/binwiederhier/ntfy"
+    },
+    "max_message_size_bytes": 4096,
+    "message_retention_hours": 12,
+    "protocols": [
+      "http",
+      "websocket"
+    ]
+  },
+  "instance_spec": "compose.yaml",
+  "name": "ntfy-sh",
+  "payout_price": {
+    "description": "Platform retains 20% after base cost",
+    "percentage": "80.00",
+    "type": "revenue_share"
+  },
+  "service_type": "container",
+  "status": "ready",
+  "summary": "Push notifications over plain HTTP: POST a message from any script, CI pipeline, or app and receive it on your phone, desktop, or a streaming client, on your own private ntfy instance.",
+  "time_created": "2025-01-04T00:00:00Z",
+  "upstream_access_config": {
+    "base": {
+      "access_method": "container",
+      "description": "One private ntfy instance for one enrollment; temporary storage.",
+      "entries": [
+        {
+          "auth": "app",
+          "name": "api",
+          "path": "/",
+          "port": 80,
+          "service": "ntfy"
+        }
+      ],
+      "environment": {
+        "ntfy": {
+          "NTFY_ATTACHMENT_CACHE_DIR": "{{ params.NTFY_ATTACHMENT_CACHE_DIR }}",
+          "NTFY_ATTACHMENT_EXPIRY_DURATION": "{{ params.NTFY_ATTACHMENT_EXPIRY_DURATION }}",
+          "NTFY_ATTACHMENT_FILE_SIZE_LIMIT": "{{ params.NTFY_ATTACHMENT_FILE_SIZE_LIMIT }}",
+          "NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT": "{{ params.NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT }}",
+          "NTFY_AUTH_ACCESS_CACHE": "{{ params.NTFY_AUTH_ACCESS_CACHE }}",
+          "NTFY_AUTH_TOKENS": "admin:{{ params.NTFY_ACCESS_TOKEN }}:enrollment",
+          "NTFY_AUTH_USERS": "admin:$2a$10$oGEA5sTZZVcFOpiqyGaTn.qJ/XvvZbnEdq05hW9T5OEmh9S5IiY2q:admin",
+          "NTFY_BAN_FILE": "{{ params.NTFY_BAN_FILE }}",
+          "NTFY_BAN_THRESHOLD": "{{ params.NTFY_BAN_THRESHOLD }}",
+          "NTFY_BAN_WEIGHTS": "{{ params.NTFY_BAN_WEIGHTS }}",
+          "NTFY_BAN_WINDOW": "{{ params.NTFY_BAN_WINDOW }}",
+          "NTFY_BASE_URL": "{{ params.NTFY_BASE_URL }}",
+          "NTFY_BILLING_CONTACT": "{{ params.NTFY_BILLING_CONTACT }}",
+          "NTFY_CACHE_BATCH_SIZE": "{{ params.NTFY_CACHE_BATCH_SIZE }}",
+          "NTFY_CACHE_BATCH_TIMEOUT": "{{ params.NTFY_CACHE_BATCH_TIMEOUT }}",
+          "NTFY_CACHE_DURATION": "{{ params.NTFY_CACHE_DURATION }}",
+          "NTFY_CACHE_STARTUP_QUERIES": "{{ params.NTFY_CACHE_STARTUP_QUERIES }}",
+          "NTFY_ENABLE_LOGIN": "{{ params.NTFY_ENABLE_LOGIN }}",
+          "NTFY_ENABLE_RESERVATIONS": "{{ params.NTFY_ENABLE_RESERVATIONS }}",
+          "NTFY_ENABLE_SIGNUP": "{{ params.NTFY_ENABLE_SIGNUP }}",
+          "NTFY_GLOBAL_TOPIC_LIMIT": "{{ params.NTFY_GLOBAL_TOPIC_LIMIT }}",
+          "NTFY_KEEPALIVE_INTERVAL": "{{ params.NTFY_KEEPALIVE_INTERVAL }}",
+          "NTFY_LOG_FILE": "{{ params.NTFY_LOG_FILE }}",
+          "NTFY_LOG_FORMAT": "{{ params.NTFY_LOG_FORMAT }}",
+          "NTFY_LOG_LEVEL": "{{ params.NTFY_LOG_LEVEL }}",
+          "NTFY_MANAGER_INTERVAL": "{{ params.NTFY_MANAGER_INTERVAL }}",
+          "NTFY_MESSAGE_DELAY_LIMIT": "{{ params.NTFY_MESSAGE_DELAY_LIMIT }}",
+          "NTFY_MESSAGE_SIZE_LIMIT": "{{ params.NTFY_MESSAGE_SIZE_LIMIT }}",
+          "NTFY_PROXY_FORWARDED_HEADER": "{{ params.NTFY_PROXY_FORWARDED_HEADER }}",
+          "NTFY_PROXY_TRUSTED_HOSTS": "{{ params.NTFY_PROXY_TRUSTED_HOSTS }}",
+          "NTFY_REQUIRE_LOGIN": "{{ params.NTFY_REQUIRE_LOGIN }}",
+          "NTFY_SMTP_SENDER_ADDR": "{{ params.NTFY_SMTP_SENDER_ADDR }}",
+          "NTFY_SMTP_SENDER_FROM": "{{ params.NTFY_SMTP_SENDER_FROM }}",
+          "NTFY_SMTP_SENDER_PASS": "{{ params.NTFY_SMTP_SENDER_PASS }}",
+          "NTFY_SMTP_SENDER_USER": "{{ params.NTFY_SMTP_SENDER_USER }}",
+          "NTFY_SMTP_SENDER_VERIFY": "{{ params.NTFY_SMTP_SENDER_VERIFY }}",
+          "NTFY_STRIPE_SECRET_KEY": "{{ params.NTFY_STRIPE_SECRET_KEY }}",
+          "NTFY_STRIPE_WEBHOOK_KEY": "{{ params.NTFY_STRIPE_WEBHOOK_KEY }}",
+          "NTFY_TWILIO_ACCOUNT": "{{ params.NTFY_TWILIO_ACCOUNT }}",
+          "NTFY_TWILIO_AUTH_TOKEN": "{{ params.NTFY_TWILIO_AUTH_TOKEN }}",
+          "NTFY_TWILIO_PHONE_NUMBER": "{{ params.NTFY_TWILIO_PHONE_NUMBER }}",
+          "NTFY_TWILIO_VERIFY_SERVICE": "{{ params.NTFY_TWILIO_VERIFY_SERVICE }}",
+          "NTFY_UPSTREAM_ACCESS_TOKEN": "{{ params.NTFY_UPSTREAM_ACCESS_TOKEN }}",
+          "NTFY_UPSTREAM_BASE_URL": "{{ params.NTFY_UPSTREAM_BASE_URL }}",
+          "NTFY_VISITOR_ATTACHMENT_DAILY_BANDWIDTH_LIMIT": "{{ params.NTFY_VISITOR_ATTACHMENT_DAILY_BANDWIDTH_LIMIT }}",
+          "NTFY_VISITOR_ATTACHMENT_TOTAL_SIZE_LIMIT": "{{ params.NTFY_VISITOR_ATTACHMENT_TOTAL_SIZE_LIMIT }}",
+          "NTFY_VISITOR_EMAIL_LIMIT_BURST": "{{ params.NTFY_VISITOR_EMAIL_LIMIT_BURST }}",
+          "NTFY_VISITOR_EMAIL_LIMIT_REPLENISH": "{{ params.NTFY_VISITOR_EMAIL_LIMIT_REPLENISH }}",
+          "NTFY_VISITOR_MESSAGE_DAILY_LIMIT": "{{ params.NTFY_VISITOR_MESSAGE_DAILY_LIMIT }}",
+          "NTFY_VISITOR_PREFIX_BITS_IPV4": "{{ params.NTFY_VISITOR_PREFIX_BITS_IPV4 }}",
+          "NTFY_VISITOR_PREFIX_BITS_IPV6": "{{ params.NTFY_VISITOR_PREFIX_BITS_IPV6 }}",
+          "NTFY_VISITOR_REQUEST_LIMIT_BURST": "{{ params.NTFY_VISITOR_REQUEST_LIMIT_BURST }}",
+          "NTFY_VISITOR_REQUEST_LIMIT_EXEMPT_HOSTS": "{{ params.NTFY_VISITOR_REQUEST_LIMIT_EXEMPT_HOSTS }}",
+          "NTFY_VISITOR_REQUEST_LIMIT_REPLENISH": "{{ params.NTFY_VISITOR_REQUEST_LIMIT_REPLENISH }}",
+          "NTFY_VISITOR_SUBSCRIBER_RATE_LIMITING": "{{ params.NTFY_VISITOR_SUBSCRIBER_RATE_LIMITING }}",
+          "NTFY_VISITOR_SUBSCRIPTION_LIMIT": "{{ params.NTFY_VISITOR_SUBSCRIPTION_LIMIT }}",
+          "NTFY_VISITOR_TOPIC_CREATION_LIMIT_BURST": "{{ params.NTFY_VISITOR_TOPIC_CREATION_LIMIT_BURST }}",
+          "NTFY_VISITOR_TOPIC_CREATION_LIMIT_REPLENISH": "{{ params.NTFY_VISITOR_TOPIC_CREATION_LIMIT_REPLENISH }}",
+          "NTFY_WEB_PUSH_EMAIL_ADDRESS": "{{ params.NTFY_WEB_PUSH_EMAIL_ADDRESS }}",
+          "NTFY_WEB_PUSH_EXPIRY_DURATION": "{{ params.NTFY_WEB_PUSH_EXPIRY_DURATION }}",
+          "NTFY_WEB_PUSH_EXPIRY_WARNING_DURATION": "{{ params.NTFY_WEB_PUSH_EXPIRY_WARNING_DURATION }}",
+          "NTFY_WEB_PUSH_FILE": "{{ params.NTFY_WEB_PUSH_FILE }}",
+          "NTFY_WEB_PUSH_PRIVATE_KEY": "{{ params.NTFY_WEB_PUSH_PRIVATE_KEY }}",
+          "NTFY_WEB_PUSH_PUBLIC_KEY": "{{ params.NTFY_WEB_PUSH_PUBLIC_KEY }}",
+          "NTFY_WEB_PUSH_STARTUP_QUERIES": "{{ params.NTFY_WEB_PUSH_STARTUP_QUERIES }}",
+          "NTFY_WEB_ROOT": "{{ params.NTFY_WEB_ROOT }}"
+        }
+      },
+      "params": {
+        "schema": {
+          "properties": {
+            "NTFY_ACCESS_TOKEN": {
+              "default": "tk_{{ token_urlsafe(21) }}0",
+              "description": "Generated for this enrollment; keep it or enter your own (the form tk_ followed by 29 letters, digits, - or _). It is the Bearer token for publishing to and subscribing from your instance, and without it every request is denied. Save it; it is also shown in the enrollment's instance details. Changing it later restarts the instance.",
+              "pattern": "^tk_[-_A-Za-z0-9]{29}$",
+              "title": "Access token",
+              "type": "string"
+            },
+            "NTFY_ATTACHMENT_CACHE_DIR": {
+              "default": "",
+              "description": "Cache directory for attached files, or S3 URL for object storage (format: s3://KEY:SECRET@BUCKET[/PREFIX]?region=REGION[&endpoint=ENDPOINT][&disable_http2=true]). (NTFY option attachment-cache-dir; format: directory or S3 URL).",
+              "title": "attachment-cache-dir",
+              "type": "string"
+            },
+            "NTFY_ATTACHMENT_EXPIRY_DURATION": {
+              "default": "3h",
+              "description": "Duration after which uploaded attachments will be deleted (e.g. 3h, 20h). Capped at cache-duration. Strongly affects visitor-attachment-total-size-limit. (NTFY option attachment-expiry-duration; format: duration).",
+              "title": "attachment-expiry-duration",
+              "type": "string"
+            },
+            "NTFY_ATTACHMENT_FILE_SIZE_LIMIT": {
+              "default": "15M",
+              "description": "Per-file attachment size limit (e.g. 300k, 2M, 100M). Larger attachment will be rejected. (NTFY option attachment-file-size-limit; format: size).",
+              "title": "attachment-file-size-limit",
+              "type": "string"
+            },
+            "NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT": {
+              "default": "5G",
+              "description": "Limit of the on-disk attachment cache directory. If the limits is exceeded, new attachments will be rejected. (NTFY option attachment-total-size-limit; format: size).",
+              "title": "attachment-total-size-limit",
+              "type": "string"
+            },
+            "NTFY_AUTH_ACCESS_CACHE": {
+              "default": "false",
+              "description": "Enables an in-memory ACL cache so authorization checks no longer hit the database. Only worth enabling on high-volume servers. (NTFY option auth-access-cache; format: bool).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "auth-access-cache",
+              "type": "string"
+            },
+            "NTFY_BAN_FILE": {
+              "default": "",
+              "description": "Abuse ban-feed: file confirmed abusive visitor IPs are appended to, for fail2ban to tail. Empty disables the feature. See Banning bad actors (NTFY option ban-file; format: filename).",
+              "title": "ban-file",
+              "type": "string"
+            },
+            "NTFY_BAN_THRESHOLD": {
+              "default": "100",
+              "description": "Abuse ban-feed: weighted strikes per ban-window before a prefix is written to ban-file (NTFY option ban-threshold; format: number).",
+              "title": "ban-threshold",
+              "type": "string"
+            },
+            "NTFY_BAN_WEIGHTS": {
+              "default": "42909:2,50701:0.05,41002:0.05",
+              "description": "Abuse ban-feed: per-code strike weights (exact code, family 429, or ; longest match wins; 0 exempts). See Banning bad actors (NTFY option ban-weights; format: list of KEY:WEIGHT).",
+              "title": "ban-weights",
+              "type": "string"
+            },
+            "NTFY_BAN_WINDOW": {
+              "default": "10m",
+              "description": "Abuse ban-feed: rolling window over which weighted strikes are counted, per IP prefix (NTFY option ban-window; format: duration).",
+              "title": "ban-window",
+              "type": "string"
+            },
+            "NTFY_BASE_URL": {
+              "default": "",
+              "description": "Public facing base URL of the service (e.g. https://ntfy.sh) (NTFY option base-url; format: URL).",
+              "title": "base-url",
+              "type": "string"
+            },
+            "NTFY_BILLING_CONTACT": {
+              "default": "",
+              "description": "Payments: Email or website displayed in Upgrade dialog as a billing contact (NTFY option billing-contact; format: email address or website).",
+              "title": "billing-contact",
+              "type": "string"
+            },
+            "NTFY_CACHE_BATCH_SIZE": {
+              "default": "0",
+              "description": "Max size of messages to batch together when writing to message cache (if zero, writes are synchronous) (NTFY option cache-batch-size; format: int).",
+              "title": "cache-batch-size",
+              "type": "string"
+            },
+            "NTFY_CACHE_BATCH_TIMEOUT": {
+              "default": "0s",
+              "description": "Timeout for batched async writes to the message cache (if zero, writes are synchronous) (NTFY option cache-batch-timeout; format: duration).",
+              "title": "cache-batch-timeout",
+              "type": "string"
+            },
+            "NTFY_CACHE_DURATION": {
+              "default": "12h",
+              "description": "Duration for which messages will be buffered before they are deleted. This is required to support the since=... and poll=1 parameter. Set this to 0 to disable the cache entirely. (NTFY option cache-duration; format: duration).",
+              "title": "cache-duration",
+              "type": "string"
+            },
+            "NTFY_CACHE_STARTUP_QUERIES": {
+              "default": "",
+              "description": "SQL queries to run during database startup; this is useful for tuning and enabling WAL mode (NTFY option cache-startup-queries; format: string (SQL queries)).",
+              "title": "cache-startup-queries",
+              "type": "string"
+            },
+            "NTFY_ENABLE_LOGIN": {
+              "default": "false",
+              "description": "Allows users to log in via the web app, or API (NTFY option enable-login; format: boolean (true or false)).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "enable-login",
+              "type": "string"
+            },
+            "NTFY_ENABLE_RESERVATIONS": {
+              "default": "false",
+              "description": "Allows users to reserve topics (if their tier allows it) (NTFY option enable-reservations; format: boolean (true or false)).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "enable-reservations",
+              "type": "string"
+            },
+            "NTFY_ENABLE_SIGNUP": {
+              "default": "false",
+              "description": "Allows users to sign up via the web app, or API (NTFY option enable-signup; format: boolean (true or false)).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "enable-signup",
+              "type": "string"
+            },
+            "NTFY_GLOBAL_TOPIC_LIMIT": {
+              "default": "15000",
+              "description": "Rate limiting: Total number of topics before the server rejects new topics. (NTFY option global-topic-limit; format: number).",
+              "title": "global-topic-limit",
+              "type": "string"
+            },
+            "NTFY_KEEPALIVE_INTERVAL": {
+              "default": "45s",
+              "description": "Interval in which keepalive messages are sent to the client. This is to prevent intermediaries closing the connection for inactivity. Note that the Android app has a hardcoded timeout at 77s, so it should be less than that. (NTFY option keepalive-interval; format: duration).",
+              "title": "keepalive-interval",
+              "type": "string"
+            },
+            "NTFY_LOG_FILE": {
+              "default": "",
+              "description": "Defines the filename to write logs to. If this is not set, ntfy logs to stderr (NTFY option log-file; format: string).",
+              "title": "log-file",
+              "type": "string"
+            },
+            "NTFY_LOG_FORMAT": {
+              "default": "text",
+              "description": "Defines the output format, can be text or json (NTFY option log-format; format: string).",
+              "title": "log-format",
+              "type": "string"
+            },
+            "NTFY_LOG_LEVEL": {
+              "default": "info",
+              "description": "Defines the default log level, can be one of trace, debug, info, warn or error (NTFY option log-level; format: string).",
+              "title": "log-level",
+              "type": "string"
+            },
+            "NTFY_MANAGER_INTERVAL": {
+              "default": "1m",
+              "description": "Interval in which the manager prunes old messages, deletes topics and prints the stats. (NTFY option manager-interval; format: duration).",
+              "title": "manager-interval",
+              "type": "string"
+            },
+            "NTFY_MESSAGE_DELAY_LIMIT": {
+              "default": "3d",
+              "description": "Amount of time a message can be scheduled into the future when using the Delay header (NTFY option message-delay-limit; format: duration).",
+              "title": "message-delay-limit",
+              "type": "string"
+            },
+            "NTFY_MESSAGE_SIZE_LIMIT": {
+              "default": "4K",
+              "description": "The size limit for the message body. Please note that this is largely untested, and that FCM/APNS have limits around 4KB. If you increase this size limit, FCM and APNS will NOT work for large messages. (NTFY option message-size-limit; format: size).",
+              "title": "message-size-limit",
+              "type": "string"
+            },
+            "NTFY_PROXY_FORWARDED_HEADER": {
+              "default": "X-Forwarded-For",
+              "description": "Use specified header to determine visitor IP address (for rate limiting) (NTFY option proxy-forwarded-header; format: string).",
+              "title": "proxy-forwarded-header",
+              "type": "string"
+            },
+            "NTFY_PROXY_TRUSTED_HOSTS": {
+              "default": "",
+              "description": "Comma-separated list of trusted IP addresses, hosts, or CIDRs to remove from forwarded header (NTFY option proxy-trusted-hosts; format: comma-separated host/IP/CIDR list).",
+              "title": "proxy-trusted-hosts",
+              "type": "string"
+            },
+            "NTFY_REQUIRE_LOGIN": {
+              "default": "false",
+              "description": "All actions via the web app require a login (NTFY option require-login; format: boolean (true or false)).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "require-login",
+              "type": "string"
+            },
+            "NTFY_SMTP_SENDER_ADDR": {
+              "default": "",
+              "description": "SMTP server address to allow email sending (NTFY option smtp-sender-addr; format: host:port).",
+              "title": "smtp-sender-addr",
+              "type": "string"
+            },
+            "NTFY_SMTP_SENDER_FROM": {
+              "default": "",
+              "description": "SMTP sender e-mail address; only used if e-mail sending is enabled (NTFY option smtp-sender-from; format: e-mail address).",
+              "title": "smtp-sender-from",
+              "type": "string"
+            },
+            "NTFY_SMTP_SENDER_PASS": {
+              "default": "",
+              "description": "SMTP password; only used if e-mail sending is enabled (NTFY option smtp-sender-pass; format: string).",
+              "title": "smtp-sender-pass",
+              "type": "string"
+            },
+            "NTFY_SMTP_SENDER_USER": {
+              "default": "",
+              "description": "SMTP user; only used if e-mail sending is enabled (NTFY option smtp-sender-user; format: string).",
+              "title": "smtp-sender-user",
+              "type": "string"
+            },
+            "NTFY_SMTP_SENDER_VERIFY": {
+              "default": "false",
+              "description": "If true, require verified email addresses for email notifications; anonymous email sending is disabled (NTFY option smtp-sender-verify; format: bool).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "smtp-sender-verify",
+              "type": "string"
+            },
+            "NTFY_STRIPE_SECRET_KEY": {
+              "default": "",
+              "description": "Payments: Key used for the Stripe API communication, this enables payments (NTFY option stripe-secret-key; format: string).",
+              "title": "stripe-secret-key",
+              "type": "string"
+            },
+            "NTFY_STRIPE_WEBHOOK_KEY": {
+              "default": "",
+              "description": "Payments: Key required to validate the authenticity of incoming webhooks from Stripe (NTFY option stripe-webhook-key; format: string).",
+              "title": "stripe-webhook-key",
+              "type": "string"
+            },
+            "NTFY_TWILIO_ACCOUNT": {
+              "default": "",
+              "description": "Twilio account SID, e.g. AC... (NTFY option twilio-account; format: string).",
+              "title": "twilio-account",
+              "type": "string"
+            },
+            "NTFY_TWILIO_AUTH_TOKEN": {
+              "default": "",
+              "description": "Twilio auth token, e.g. ... (NTFY option twilio-auth-token; format: string).",
+              "title": "twilio-auth-token",
+              "type": "string"
+            },
+            "NTFY_TWILIO_PHONE_NUMBER": {
+              "default": "",
+              "description": "Twilio outgoing phone number, e.g. +18775132586 (NTFY option twilio-phone-number; format: string).",
+              "title": "twilio-phone-number",
+              "type": "string"
+            },
+            "NTFY_TWILIO_VERIFY_SERVICE": {
+              "default": "",
+              "description": "Twilio Verify service SID, e.g. VA... (NTFY option twilio-verify-service; format: string).",
+              "title": "twilio-verify-service",
+              "type": "string"
+            },
+            "NTFY_UPSTREAM_ACCESS_TOKEN": {
+              "default": "",
+              "description": "Access token to use for the upstream server; needed only if upstream rate limits are exceeded or upstream server requires auth (NTFY option upstream-access-token; format: string).",
+              "title": "upstream-access-token",
+              "type": "string"
+            },
+            "NTFY_UPSTREAM_BASE_URL": {
+              "default": "",
+              "description": "Forward poll request to an upstream server, this is needed for iOS push notifications for self-hosted servers (NTFY option upstream-base-url; format: URL).",
+              "title": "upstream-base-url",
+              "type": "string"
+            },
+            "NTFY_VISITOR_ATTACHMENT_DAILY_BANDWIDTH_LIMIT": {
+              "default": "500M",
+              "description": "Rate limiting: Total daily traffic limit per visitor, covering attachment downloads/uploads and messages replayed from the cache by poll requests. This is to protect your bandwidth costs from exploding. (NTFY option visitor-attachment-daily-bandwidth-limit; format: size).",
+              "title": "visitor-attachment-daily-bandwidth-limit",
+              "type": "string"
+            },
+            "NTFY_VISITOR_ATTACHMENT_TOTAL_SIZE_LIMIT": {
+              "default": "100M",
+              "description": "Rate limiting: Total storage limit used for attachments per visitor, for all attachments combined. Storage is freed after attachments expire. See attachment-expiry-duration. (NTFY option visitor-attachment-total-size-limit; format: size).",
+              "title": "visitor-attachment-total-size-limit",
+              "type": "string"
+            },
+            "NTFY_VISITOR_EMAIL_LIMIT_BURST": {
+              "default": "16",
+              "description": "Rate limiting:Initial limit of e-mails per visitor (NTFY option visitor-email-limit-burst; format: number).",
+              "title": "visitor-email-limit-burst",
+              "type": "string"
+            },
+            "NTFY_VISITOR_EMAIL_LIMIT_REPLENISH": {
+              "default": "1h",
+              "description": "Rate limiting: Strongly related to visitor-email-limit-burst: The rate at which the bucket is refilled (NTFY option visitor-email-limit-replenish; format: duration).",
+              "title": "visitor-email-limit-replenish",
+              "type": "string"
+            },
+            "NTFY_VISITOR_MESSAGE_DAILY_LIMIT": {
+              "default": "",
+              "description": "Rate limiting: Allowed number of messages per day per visitor, reset every 24 hours at the visitor's own time of day. By default, this value is unset. (NTFY option visitor-message-daily-limit; format: number).",
+              "title": "visitor-message-daily-limit",
+              "type": "string"
+            },
+            "NTFY_VISITOR_PREFIX_BITS_IPV4": {
+              "default": "32",
+              "description": "Rate limiting: Number of bits to use for IPv4 visitor prefix, e.g. 24 for /24 (NTFY option visitor-prefix-bits-ipv4; format: number).",
+              "title": "visitor-prefix-bits-ipv4",
+              "type": "string"
+            },
+            "NTFY_VISITOR_PREFIX_BITS_IPV6": {
+              "default": "64",
+              "description": "Rate limiting: Number of bits to use for IPv6 visitor prefix, e.g. 48 for /48 (NTFY option visitor-prefix-bits-ipv6; format: number).",
+              "title": "visitor-prefix-bits-ipv6",
+              "type": "string"
+            },
+            "NTFY_VISITOR_REQUEST_LIMIT_BURST": {
+              "default": "60",
+              "description": "Rate limiting: Allowed GET/PUT/POST requests per second, per visitor. This setting is the initial bucket of requests each visitor has (NTFY option visitor-request-limit-burst; format: number).",
+              "title": "visitor-request-limit-burst",
+              "type": "string"
+            },
+            "NTFY_VISITOR_REQUEST_LIMIT_EXEMPT_HOSTS": {
+              "default": "",
+              "description": "Rate limiting: List of hostnames and IPs to be exempt from request rate limiting (NTFY option visitor-request-limit-exempt-hosts; format: comma-separated host/IP/CIDR list).",
+              "title": "visitor-request-limit-exempt-hosts",
+              "type": "string"
+            },
+            "NTFY_VISITOR_REQUEST_LIMIT_REPLENISH": {
+              "default": "5s",
+              "description": "Rate limiting: Strongly related to visitor-request-limit-burst: The rate at which the bucket is refilled (NTFY option visitor-request-limit-replenish; format: duration).",
+              "title": "visitor-request-limit-replenish",
+              "type": "string"
+            },
+            "NTFY_VISITOR_SUBSCRIBER_RATE_LIMITING": {
+              "default": "false",
+              "description": "Rate limiting: Enables subscriber-based rate limiting (NTFY option visitor-subscriber-rate-limiting; format: bool).",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "title": "visitor-subscriber-rate-limiting",
+              "type": "string"
+            },
+            "NTFY_VISITOR_SUBSCRIPTION_LIMIT": {
+              "default": "30",
+              "description": "Rate limiting: Number of subscriptions per visitor (IP address) (NTFY option visitor-subscription-limit; format: number).",
+              "title": "visitor-subscription-limit",
+              "type": "string"
+            },
+            "NTFY_VISITOR_TOPIC_CREATION_LIMIT_BURST": {
+              "default": "100",
+              "description": "Rate limiting: Initial bucket of new topic creations per visitor. 0 disables the limit. (NTFY option visitor-topic-creation-limit-burst; format: number).",
+              "title": "visitor-topic-creation-limit-burst",
+              "type": "string"
+            },
+            "NTFY_VISITOR_TOPIC_CREATION_LIMIT_REPLENISH": {
+              "default": "1m",
+              "description": "Rate limiting: Rate at which the per-visitor topic-creation bucket is refilled (one new topic per x). (NTFY option visitor-topic-creation-limit-replenish; format: duration).",
+              "title": "visitor-topic-creation-limit-replenish",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_EMAIL_ADDRESS": {
+              "default": "",
+              "description": "Web Push: Sender email address (NTFY option web-push-email-address; format: string).",
+              "title": "web-push-email-address",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_EXPIRY_DURATION": {
+              "default": "60d",
+              "description": "Web Push: Duration after which a subscription is considered stale and will be deleted. This is to prevent stale subscriptions. (NTFY option web-push-expiry-duration; format: duration).",
+              "title": "web-push-expiry-duration",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_EXPIRY_WARNING_DURATION": {
+              "default": "55d",
+              "description": "Web Push: Duration after which a warning is sent to subscribers that their subscription will expire soon. This is to prevent stale subscriptions. (NTFY option web-push-expiry-warning-duration; format: duration).",
+              "title": "web-push-expiry-warning-duration",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_FILE": {
+              "default": "",
+              "description": "Web Push: Database file that stores subscriptions (NTFY option web-push-file; format: string).",
+              "title": "web-push-file",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_PRIVATE_KEY": {
+              "default": "",
+              "description": "Web Push: Private Key. Run ntfy webpush keys to generate (NTFY option web-push-private-key; format: string).",
+              "title": "web-push-private-key",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_PUBLIC_KEY": {
+              "default": "",
+              "description": "Web Push: Public Key. Run ntfy webpush keys to generate (NTFY option web-push-public-key; format: string).",
+              "title": "web-push-public-key",
+              "type": "string"
+            },
+            "NTFY_WEB_PUSH_STARTUP_QUERIES": {
+              "default": "",
+              "description": "Web Push: SQL queries to run against subscription database at startup (NTFY option web-push-startup-queries; format: string).",
+              "title": "web-push-startup-queries",
+              "type": "string"
+            },
+            "NTFY_WEB_ROOT": {
+              "default": "/",
+              "description": "Sets root of the web app (e.g. /, or /app), or disables it entirely (disable) (NTFY option web-root; format: path, e.g. / or /app, or disable).",
+              "title": "web-root",
+              "type": "string"
+            }
+          },
+          "required": [
+            "NTFY_ACCESS_TOKEN"
+          ],
+          "type": "object"
+        },
+        "testing_defaults": {
+          "NTFY_ACCESS_TOKEN": "tk_unitysvcopstestntfy0000000001"
+        }
+      },
+      "resources": "nano",
+      "type": "enrollable"
+    }
+  }
+}

@@ -13,11 +13,9 @@ services:
       # Storage is ephemeral: the cache and auth databases live in /tmp and
       # are recreated whenever the instance starts.
       NTFY_CACHE_FILE: /tmp/cache.db
-      NTFY_CACHE_DURATION: 12h
       NTFY_AUTH_FILE: /tmp/user.db
       # Deny anonymous access; clients authenticate with the access token.
       NTFY_AUTH_DEFAULT_ACCESS: deny-all
-      NTFY_MESSAGE_SIZE_LIMIT: 4k
     healthcheck:
       test: [CMD-SHELL, "wget -q --tries=1 -O - http://127.0.0.1:80/v1/health | grep -q '\"healthy\":true'"]
       interval: 5s
