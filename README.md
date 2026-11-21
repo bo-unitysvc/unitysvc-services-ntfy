@@ -4,7 +4,7 @@ Service data for [ntfy.sh](https://ntfy.sh) push notifications on the [UnitySVC]
 
 ## Overview
 
-This repo contains the provider, offering, and listing data for the **ntfy Push Notifications** service. `labs/ntfy-sh` is a **container service**: UnitySVC runs the official `binwiederhier/ntfy` image as one private instance per enrollment on the UnitySVC compute cluster, at the customer's expense. Publish messages via simple HTTP POST requests to the instance URL and receive them on mobile (iOS/Android), desktop, or via a streaming API.
+This repo contains the provider, offering, and listing data for the **ntfy Push Notifications** service. `binwiederhier/ntfy-sh` is a **container service**: UnitySVC runs the official `binwiederhier/ntfy` image as one private instance per enrollment on the UnitySVC compute cluster, at the customer's expense. Publish messages via simple HTTP POST requests to the instance URL and receive them on mobile (iOS/Android), desktop, or via a streaming API.
 
 **Key features:**
 
@@ -20,9 +20,9 @@ This repo contains the provider, offering, and listing data for the **ntfy Push 
 
 ```
 services/specs/
-└── labs/
+└── binwiederhier/
     └── ntfy-sh/                       # the folder name IS the service name
-        ├── provider.json              # Provider: UnitySVC Labs (`labs`)
+        ├── provider.json              # Provider: ntfy's author, Philipp C. Heckel (`binwiederhier`)
         ├── offering.json              # Offering: container channel, entry, params, payout
         ├── listing.json               # Listing: documents and price
         ├── service.json               # Identity sidecar (backend service_id)
@@ -32,7 +32,7 @@ services/specs/
         └── images/                    # Screenshots used by the guide
 ```
 
-The service is published as **`labs/ntfy-sh`** — `listing.name` is the folder's
+The service is published as **`binwiederhier/ntfy-sh`** — `listing.name` is the folder's
 path under `services/specs/`, and `offering.name` is the bare service name (`ntfy-sh`).
 
 ### How the instance is configured
@@ -51,6 +51,16 @@ publish and subscribe with `Authorization: Bearer <token>`.
 
 Storage is ephemeral: cached messages are lost when the instance is replaced
 or stopped.
+
+### Provider
+
+The provider is the software's author on GitHub, **Philipp C. Heckel** (`binwiederhier`), not UnitySVC Labs: the listing credits the people who wrote ntfy, and `listing.name` is `binwiederhier/ntfy-sh`. UnitySVC Labs is only the seller that uploads it. The provider's contact address is ntfy's published general contact (`contact@mail.ntfy.sh`); the author was not asked to take part.
+
+### Parameters
+
+Every ntfy environment variable the container accepts is an enrollment parameter, with ntfy's own default as the default, so a stock enrollment runs the stock configuration. `NTFY_ACCESS_TOKEN` is the only required one. The service owns, and does not expose, the variables that would break it: where ntfy listens and its TLS, its storage files and database, its cluster mode, and its default access (the list and the reason for each are `EXCLUDED` in `scripts/generate_ntfy_params.py`).
+
+`scripts/generate_ntfy_params.py` writes the parameters and the channel's `environment` from ntfy's configuration reference at a given tag. Run it when the ntfy version changes, then `usvc_seller specs format`. The documentation table sometimes shows an example where ntfy's real default is unset (`NTFY_UPSTREAM_BASE_URL`), which the script overrides; to check a change, start the image with every variable at its default and see that it comes up.
 
 ### Documents
 
@@ -86,13 +96,13 @@ usvc_seller specs validate
 usvc_seller specs format
 
 # Local container test — runs the image in Docker and waits for the health check
-usvc_seller specs run-tests labs/ntfy-sh --force
+usvc_seller specs run-tests binwiederhier/ntfy-sh --force
 
 # Push to staging (re-upload creates a revision)
-usvc_seller specs upload labs/ntfy-sh
+usvc_seller specs upload binwiederhier/ntfy-sh
 
 # Platform test — starts a temporary instance on the compute cluster
-usvc_seller services run-tests labs/ntfy-sh --force
+usvc_seller services run-tests binwiederhier/ntfy-sh --force
 ```
 
 

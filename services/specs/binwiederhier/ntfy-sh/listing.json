@@ -24,7 +24,7 @@
     "price": "5",
     "type": "one_month"
   },
-  "name": "labs/ntfy-sh",
+  "name": "binwiederhier/ntfy-sh",
   "status": "ready",
   "time_created": "2025-01-04T00:00:00Z"
 }
