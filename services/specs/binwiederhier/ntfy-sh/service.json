@@ -1,0 +1,11 @@
+{
+  "display_name": "ntfy Push Notifications",
+  "instance_spec_warnings": [
+    "upstream_access_config.base: services.ntfy.image: `image` 'binwiederhier/ntfy:v2.38.1' is not pinned by digest: the platform runs it as written and reports the digest it pulled, and a moving tag can change at a restart. Write name:tag@sha256:<64 hex digits> to pin it (Compose runs the digest locally too)",
+    "upstream_access_config.base: environment.ntfy.NTFY_AUTH_USERS: contains a variable reference, kept as written; only {{ params.NAME }} is bound per instance, how any other secret is bound is not decided yet (unitysvc-core#105, open 4)"
+  ],
+  "name": "binwiederhier/ntfy-sh",
+  "service_id": "320e8d12-0ebf-4bd1-a1fb-868b8f357744",
+  "status": "created",
+  "time_created": "2026-11-21T06:56:58.578050Z"
+}
